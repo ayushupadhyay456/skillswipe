@@ -1,75 +1,714 @@
-{% extends "base.html" %}
-{% block title %}SkillSwap — trade skills, not money{% endblock %}
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillSwap — Trade Skills, Grow Together</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --indigo:    #6366f1;
+    --indigo-l:  #818cf8;
+    --indigo-d:  #4338ca;
+    --emerald:   #10b981;
+    --emerald-l: #34d399;
+    --amber:     #f59e0b;
+    --rose:      #f43f5e;
+    --bg:        #0a0a0f;
+    --bg2:       #111118;
+    --bg3:       #18181f;
+    --border:    rgba(255,255,255,0.07);
+    --text:      #f1f5f9;
+    --muted:     #64748b;
+    --card:      rgba(255,255,255,0.04);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; line-height: 1.6; }
 
-<section class="hero">
-  <div class="hero-inner">
-    <div class="hero-eyebrow">No money. No marketplace fees.</div>
-    <h1 class="hero-title">Trade what you know<br>for what you want to learn.</h1>
-    <p class="hero-sub">Connect with people who have your target skill — and want yours. Pure skill exchange.</p>
-    <div class="hero-cta">
-      <a href="{{ url_for('signup') }}" class="btn-primary btn-lg">Start swapping</a>
-      <a href="{{ url_for('browse') }}" class="btn-outline btn-lg">Browse skills</a>
+  /* ── NAV ─────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; text-decoration: none; }
+  .nav-logo span { color: var(--indigo); }
+  .nav-links { display: flex; gap: 32px; }
+  .nav-links a { font-size: 14px; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta { display: flex; gap: 12px; align-items: center; }
+  .btn-ghost { padding: 8px 20px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-weight: 500; color: var(--text); text-decoration: none; transition: all 0.2s; cursor: pointer; background: transparent; }
+  .btn-ghost:hover { border-color: var(--indigo); color: var(--indigo-l); }
+  .btn-primary { padding: 8px 20px; background: var(--indigo); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; color: #fff; text-decoration: none; cursor: pointer; transition: all 0.2s; }
+  .btn-primary:hover { background: var(--indigo-d); transform: translateY(-1px); }
+
+  /* ── HERO ────────────────────────────────────── */
+  .hero {
+    position: relative; min-height: 100vh;
+    display: flex; align-items: center;
+    overflow: hidden; padding: 100px 48px 60px;
+  }
+  #three-canvas {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    width: 100%; height: 100%;
+  }
+  .hero-content { position: relative; z-index: 2; max-width: 560px; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    background: rgba(99,102,241,0.12);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 100px; font-size: 13px; font-weight: 500;
+    color: var(--indigo-l); margin-bottom: 24px;
+  }
+  .hero-badge::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--emerald); animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(40px,5vw,64px); font-weight: 700;
+    line-height: 1.08; letter-spacing: -2px; margin-bottom: 20px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--indigo-l), var(--emerald-l));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero-sub { font-size: 18px; color: var(--muted); max-width: 440px; margin-bottom: 36px; line-height: 1.65; }
+  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn-lg { padding: 14px 28px; font-size: 15px; font-weight: 600; border-radius: 10px; text-decoration: none; transition: all 0.2s; cursor: pointer; display: inline-block; }
+  .btn-lg.primary { background: var(--indigo); border: none; color: #fff; box-shadow: 0 0 24px rgba(99,102,241,0.3); }
+  .btn-lg.primary:hover { background: var(--indigo-d); transform: translateY(-2px); box-shadow: 0 4px 32px rgba(99,102,241,0.4); }
+  .btn-lg.ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-lg.ghost:hover { border-color: var(--indigo); color: var(--indigo-l); }
+  .hero-stats { display: flex; gap: 32px; margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
+  .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; color: var(--text); letter-spacing: -1px; }
+  .stat-num span { color: var(--indigo-l); }
+  .stat-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* ── VARIATION BAR ───────────────────────────── */
+  .variation-bar {
+    position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; z-index: 10;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(12px);
+    border: 1px solid var(--border); border-radius: 100px; padding: 6px;
+  }
+  .morph-btn {
+    padding: 6px 18px; border-radius: 100px; border: none;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; background: transparent; color: var(--muted);
+  }
+  .morph-btn.active, .morph-btn:hover { background: var(--indigo); color: #fff; }
+
+  /* ── SECTIONS ────────────────────────────────── */
+  section { padding: 100px 48px; max-width: 1200px; margin: 0 auto; }
+  .section-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--indigo-l); margin-bottom: 12px; }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(28px,3.5vw,44px); font-weight: 700; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 16px; }
+  .section-sub { font-size: 17px; color: var(--muted); max-width: 520px; }
+
+  /* ── HOW IT WORKS ────────────────────────────── */
+  .steps-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; margin-top: 56px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .step-card { background: var(--bg2); padding: 36px 32px; transition: background 0.2s; position: relative; }
+  .step-card:hover { background: var(--bg3); }
+  .step-card::after { content:''; position:absolute; top:0; right:0; width:1px; height:100%; background: var(--border); }
+  .step-card:last-child::after { display:none; }
+  .step-num { font-family: 'Space Grotesk',sans-serif; font-size: 48px; font-weight: 800; color: rgba(99,102,241,0.15); letter-spacing: -3px; margin-bottom: 16px; line-height: 1; }
+  .step-icon { width: 44px; height: 44px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 16px; }
+  .step-title { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .step-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+  /* ── SKILLS SCROLL ───────────────────────────── */
+  .skills-section { background: var(--bg2); padding: 100px 0; }
+  .skills-inner { max-width: 1200px; margin: 0 auto; padding: 0 48px; }
+  .cards-scroll { display: flex; gap: 16px; overflow-x: auto; padding: 32px 0 16px; scrollbar-width: none; }
+  .cards-scroll::-webkit-scrollbar { display: none; }
+  .skill-card { flex: 0 0 260px; background: var(--bg3); border: 1px solid var(--border); border-radius: 16px; padding: 24px; transition: all 0.25s; cursor: pointer; }
+  .skill-card:hover { border-color: rgba(99,102,241,0.4); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+  .card-avatar { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #fff; }
+  .card-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .card-city { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+  .card-tags { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .tag { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px; border-radius: 6px; font-weight: 500; }
+  .tag.offer { background: rgba(99,102,241,0.12); color: var(--indigo-l); }
+  .tag.want  { background: rgba(16,185,129,0.12); color: var(--emerald-l); }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--border); }
+  .card-rating { font-size: 13px; color: var(--amber); font-weight: 600; }
+  .card-sessions { font-size: 12px; color: var(--muted); }
+  .card-btn { font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; background: rgba(99,102,241,0.15); color: var(--indigo-l); border: none; cursor: pointer; transition: all 0.2s; }
+  .card-btn:hover { background: var(--indigo); color: #fff; }
+
+  /* ── WHY ─────────────────────────────────────── */
+  .why-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-top: 56px; }
+  .why-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 32px; transition: all 0.2s; }
+  .why-card:hover { border-color: rgba(99,102,241,0.3); }
+  .why-card.featured { grid-column: span 2; background: linear-gradient(135deg,rgba(99,102,241,0.08),rgba(16,185,129,0.05)); border-color: rgba(99,102,241,0.2); display: flex; align-items: center; gap: 40px; }
+  .why-icon { width: 52px; height: 52px; border-radius: 12px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; margin-bottom: 16px; }
+  .why-card.featured .why-icon { width: 80px; height: 80px; font-size: 36px; margin-bottom: 0; }
+  .why-title { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .why-desc { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+  /* ── CTA ─────────────────────────────────────── */
+  .cta-section { background: linear-gradient(135deg,rgba(99,102,241,0.12),rgba(16,185,129,0.06)); border: 1px solid rgba(99,102,241,0.2); border-radius: 24px; padding: 64px; text-align: center; margin: 0 48px 100px; max-width: 1200px; margin-left: auto; margin-right: auto; }
+  .cta-section h2 { font-family: 'Space Grotesk',sans-serif; font-size: clamp(28px,3.5vw,44px); font-weight: 700; letter-spacing: -1.5px; margin-bottom: 16px; }
+  .cta-section p { font-size: 17px; color: var(--muted); margin-bottom: 32px; }
+  .cta-actions { display: flex; gap: 14px; justify-content: center; }
+
+  /* ── FOOTER ──────────────────────────────────── */
+  footer { border-top: 1px solid var(--border); padding: 40px 48px; display: flex; align-items: center; justify-content: space-between; }
+  .footer-logo { font-family: 'Space Grotesk',sans-serif; font-size: 16px; font-weight: 700; }
+  .footer-logo span { color: var(--indigo); }
+  .footer-copy { font-size: 13px; color: var(--muted); }
+
+  @media (max-width: 768px) {
+    nav { padding: 14px 20px; }
+    .nav-links { display: none; }
+    .hero { padding: 100px 24px 80px; }
+    .hero h1 { font-size: 36px; letter-spacing: -1px; }
+    .hero-stats { gap: 20px; }
+    section { padding: 60px 24px; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .step-card::after { display: none; }
+    .why-grid { grid-template-columns: 1fr; }
+    .why-card.featured { flex-direction: column; grid-column: span 1; }
+    .cta-section { padding: 40px 24px; margin: 0 24px 60px; }
+    .cta-actions { flex-direction: column; align-items: center; }
+    footer { flex-direction: column; gap: 12px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Skill<span>Swap</span></a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#browse">Browse skills</a>
+    <a href="#why">Why SkillSwap</a>
+  </div>
+  <div class="nav-cta">
+    <a href="/login" class="btn-ghost">Log in</a>
+    <a href="/signup" class="btn-primary">Get started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <canvas id="three-canvas"></canvas>
+
+  <div class="hero-content">
+    <div class="hero-badge">No money. Just skills.</div>
+    <h1>Trade Skills,<br><em>Grow Together</em></h1>
+    <p class="hero-sub">
+      Teach what you know. Learn what you don't.
+      SkillSwap connects people who want to exchange skills — no fees, no friction.
+    </p>
+    <div class="hero-actions">
+      <a href="/signup" class="btn-lg primary">Start swapping →</a>
+      <a href="/browse" class="btn-lg ghost">Browse skills</a>
     </div>
     <div class="hero-stats">
-      <div class="stat-item"><span class="stat-n">{{ total_users }}+</span><span class="stat-l">Swappers</span></div>
-      <div class="stat-sep"></div>
-      <div class="stat-item"><span class="stat-n">{{ total_swaps }}+</span><span class="stat-l">Completed swaps</span></div>
-      <div class="stat-sep"></div>
-      <div class="stat-item"><span class="stat-n">120+</span><span class="stat-l">Skills listed</span></div>
+      <div class="stat-item">
+        <div class="stat-num">{{ total_users }}<span>+</span></div>
+        <div class="stat-label">Active learners</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">120<span>+</span></div>
+        <div class="stat-label">Skills available</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">{{ total_swaps }}<span>+</span></div>
+        <div class="stat-label">Sessions done</div>
+      </div>
     </div>
   </div>
-  <div class="hero-visual">
-    <div class="swap-demo">
-      <div class="demo-card dc-top">
-        <div class="demo-av av-teal">PR</div>
-        <div class="demo-info">
-          <div class="demo-name">Priya teaches Figma</div>
-          <div class="demo-skill skill-offer">Figma UI</div>
+
+  <div class="variation-bar">
+    <button class="morph-btn active" data-variation="0">🍁 Autumn</button>
+    <button class="morph-btn" data-variation="1">❄️ Winter</button>
+    <button class="morph-btn" data-variation="2">🌸 Spring</button>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div id="how">
+<section>
+  <div class="section-eyebrow">How it works</div>
+  <h2 class="section-title">Three steps to your<br>first skill swap</h2>
+  <p class="section-sub">No complicated setup. No contracts. Just people teaching each other.</p>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <div class="step-icon">✏️</div>
+      <div class="step-title">List your skills</div>
+      <p class="step-desc">Tell us what you can teach — Python, guitar, Spanish, cooking — and what you want to learn in return.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">02</div>
+      <div class="step-icon">🔍</div>
+      <div class="step-title">Find your match</div>
+      <p class="step-desc">Browse people who have what you want to learn and want what you already know. Filter by city, skill, or rating.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">03</div>
+      <div class="step-icon">🤝</div>
+      <div class="step-title">Swap and grow</div>
+      <p class="step-desc">Send a session request, agree on a schedule, meet up or hop on a call. Teach, learn, repeat.</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- BROWSE SKILLS -->
+<div id="browse" class="skills-section">
+  <div class="skills-inner">
+    <div class="section-eyebrow">Featured members</div>
+    <h2 class="section-title">See who's swapping right now</h2>
+    <div class="cards-scroll" id="cards-container"></div>
+  </div>
+</div>
+
+<!-- WHY SKILLSWAP -->
+<div id="why">
+<section>
+  <div class="section-eyebrow">Why SkillSwap</div>
+  <h2 class="section-title">Learning that actually<br>goes both ways</h2>
+  <div class="why-grid">
+    <div class="why-card featured">
+      <div class="why-icon">♾️</div>
+      <div>
+        <div class="why-title">Zero cost, infinite value</div>
+        <p class="why-desc">No subscription. No per-session fees. You trade your time and knowledge — that's the currency here. Every swap is a fair exchange between two people who both walk away with something new.</p>
+      </div>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">⭐</div>
+      <div class="why-title">Rated community</div>
+      <p class="why-desc">Every session gets rated. Know who you're learning from before you commit — real reviews from real swaps.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🌍</div>
+      <div class="why-title">Local or remote</div>
+      <p class="why-desc">Meet someone in your city or connect remotely. Skills don't need geography.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🔒</div>
+      <div class="why-title">Safe and verified</div>
+      <p class="why-desc">Profiles are community-verified. Session history is visible. You know exactly who you're swapping with.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">⚡</div>
+      <div class="why-title">Real-time updates</div>
+      <p class="why-desc">Instant notifications when someone requests a swap, accepts your offer, or rates your session.</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2>Ready to start swapping?</h2>
+  <p>Join {{ total_users }}+ people already trading skills — no money, no barriers.</p>
+  <div class="cta-actions">
+    <a href="/signup" class="btn-lg primary">Create your profile →</a>
+    <a href="/browse" class="btn-lg ghost">Browse skills first</a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">Skill<span>Swap</span></div>
+  <div class="footer-copy">© 2026 SkillSwap. Built by Ayush Upadhyay.</div>
+</footer>
+
+<!-- MEMBER CARDS -->
+<script>
+const members = [
+  { name:'Priya S.',  city:'Mumbai',    offer:'Python',          want:'Guitar',          rating:'4.9', sessions:14, color:'#6366f1' },
+  { name:'Rohan M.',  city:'Delhi',     offer:'Guitar',          want:'Machine Learning',rating:'4.7', sessions:9,  color:'#10b981' },
+  { name:'Aisha K.',  city:'Bangalore', offer:'Spanish',         want:'React.js',        rating:'5.0', sessions:22, color:'#f59e0b' },
+  { name:'Dev T.',    city:'Hyderabad', offer:'Yoga',            want:'Video Editing',   rating:'4.8', sessions:7,  color:'#f43f5e' },
+  { name:'Meera R.',  city:'Chennai',   offer:'Photography',     want:'French',          rating:'4.6', sessions:11, color:'#8b5cf6' },
+  { name:'Arjun P.',  city:'Pune',      offer:'Cooking',         want:'Piano',           rating:'4.9', sessions:18, color:'#06b6d4' },
+];
+const container = document.getElementById('cards-container');
+members.forEach(m => {
+  const initials = m.name.split(' ').map(w=>w[0]).join('');
+  container.innerHTML += `
+    <div class="skill-card">
+      <div class="card-avatar" style="background:${m.color}20;color:${m.color};border:1px solid ${m.color}40">${initials}</div>
+      <div class="card-name">${m.name}</div>
+      <div class="card-city">📍 ${m.city}</div>
+      <div class="card-tags">
+        <div class="tag offer">🎓 Teaches: ${m.offer}</div>
+        <div class="tag want">📚 Wants: ${m.want}</div>
+      </div>
+      <div class="card-footer">
+        <div>
+          <div class="card-rating">⭐ ${m.rating}</div>
+          <div class="card-sessions">${m.sessions} sessions</div>
         </div>
+        <button class="card-btn" onclick="window.location='/signup'">Connect</button>
       </div>
-      <div class="demo-arrow">⇄</div>
-      <div class="demo-card dc-bot">
-        <div class="demo-av av-purple">AK</div>
-        <div class="demo-info">
-          <div class="demo-name">Arjun teaches Guitar</div>
-          <div class="demo-skill skill-want">Guitar</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+    </div>`;
+});
+</script>
 
-<section class="how-it-works">
-  <div class="section-inner">
-    <h2 class="section-title">How it works</h2>
-    <div class="steps">
-      <div class="step">
-        <div class="step-icon">01</div>
-        <h3>List your skills</h3>
-        <p>Tell us what you're great at and what you want to learn.</p>
-      </div>
-      <div class="step-connector"></div>
-      <div class="step">
-        <div class="step-icon">02</div>
-        <h3>Find your match</h3>
-        <p>Browse people who offer what you want and want what you offer.</p>
-      </div>
-      <div class="step-connector"></div>
-      <div class="step">
-        <div class="step-icon">03</div>
-        <h3>Start swapping</h3>
-        <p>Connect, schedule sessions, and grow together — for free.</p>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- THREE.JS IMPORTMAP -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js",
+    "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
+    "three/tsl": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.tsl.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/"
+  }
+}
+</script>
 
-<section class="cta-band">
-  <div class="section-inner cta-inner">
-    <h2>Ready to start learning?</h2>
-    <a href="{{ url_for('signup') }}" class="btn-primary btn-lg">Create your profile</a>
-  </div>
-</section>
+<script type="module">
+import * as THREE from 'three/webgpu';
+import { color, float, vec3, normalWorld, pow, max, mix, uniform, pass, mrt, output, normalView, metalness, roughness } from 'three/tsl';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-{% endblock %}
+// ── SCENE ──────────────────────────────────────────────────────────────
+const canvas = document.getElementById('three-canvas');
+const W = () => canvas.clientWidth;
+const H = () => canvas.clientHeight;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, W()/H(), 0.5, 500);
+camera.position.set(30, 30, 66);
+camera.lookAt(0, 6, 0);
+
+function applyViewOffset() {
+  camera.setViewOffset(W(), H(), -W()*0.1, 0, W(), H());
+}
+applyViewOffset();
+
+let renderer;
+try {
+  renderer = new THREE.WebGPURenderer({ canvas, antialias:true, alpha:true });
+} catch(e) {
+  renderer = new THREE.WebGPURenderer({ canvas, antialias:true, alpha:true, forceWebGL:true });
+}
+renderer.setSize(W(), H());
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.VSMShadowMap;
+renderer.setClearAlpha(0);
+await renderer.init();
+
+// ── ENVIRONMENT ────────────────────────────────────────────────────────
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envScene = new THREE.Scene();
+const skyGeo = new THREE.SphereGeometry(50, 32, 16);
+const skyMat = new THREE.MeshBasicNodeMaterial({ side: THREE.BackSide });
+skyMat.colorNode = mix(color(0x1a1a2e), color(0x0d0d1a), pow(max(float(0).sub(normalWorld.y), float(0)), float(0.5)));
+envScene.add(new THREE.Mesh(skyGeo, skyMat));
+const envRT = pmrem.fromScene(envScene, 0.04);
+scene.environment = envRT.texture;
+
+// ── PALETTES ──────────────────────────────────────────────────────────
+const grassColors  = ['#4a8c3f','#3d7a34','#5a9e4a','#2d6b24','#68ad58'];
+const rockColors   = ['#a0978a','#8c8478','#b5ad9e','#7d756a'];
+const trunkColors  = ['#4a3728','#3d2e20','#5c4535','#2e2218'];
+const leafColors   = ['#6366f1','#818cf8','#4f46e5','#7c3aed','#8b5cf6','#10b981','#34d399','#059669','#a78bfa'];
+const flowerColors = ['#10b981','#34d399','#6366f1','#818cf8','#a78bfa','#f59e0b'];
+const dirtColors   = ['#8B6914','#7A5C12','#6B4E10','#9C7A1E'];
+const stoneColors  = ['#706860','#5E564F','#887F75','#4D4640'];
+
+const categoryBatches = {};
+const occupiedPositions = new Set();
+const voxelGeo = new THREE.BoxGeometry(1,1,1);
+
+function posKey(x,y,z){ return `${Math.round(x*10)},${Math.round(y*10)},${Math.round(z*10)}`; }
+function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function queueVoxel(x,y,z,hex,rough,metal,cat){
+  const pk=posKey(x,y,z);
+  if(occupiedPositions.has(pk)) return;
+  occupiedPositions.add(pk);
+  if(!categoryBatches[cat]) categoryBatches[cat]={rough,metal,items:[]};
+  categoryBatches[cat].items.push({x,y,z,hex});
+}
+
+// ── ISLAND ────────────────────────────────────────────────────────────
+function noise(x,z){ return Math.sin(x*1.7+z*0.9)*0.4+Math.cos(z*2.1-x*0.6)*0.35+Math.sin((x+z)*1.1)*0.25; }
+
+for(let y=0;y<=6;y++){
+  const radii=[7.5,6,4.5,3.5,2.8,2,1.2];
+  const r=radii[y]||0;
+  for(let x=-9;x<=9;x++) for(let z=-7;z<=7;z++){
+    if(Math.sqrt(x*x*0.45+z*z*0.55)<r+noise(x,z)*1.2)
+      queueVoxel(x,y,z,pickRandom(grassColors),0.85,0.05,'grass');
+  }
+}
+for(let x=-9;x<=9;x++) for(let z=-7;z<=7;z++){
+  if(Math.sqrt(x*x*0.4+z*z*0.5)<8.5+noise(x*0.7,z*0.7)*1.2)
+    queueVoxel(x,-1,z,pickRandom(grassColors),0.85,0.05,'grass');
+}
+for(let y=-2;y>=-12;y--){
+  const depth=Math.abs(y+1);
+  const maxR=Math.max(0.5,8.5-depth*0.6);
+  for(let x=-10;x<=10;x++) for(let z=-8;z<=8;z++){
+    const d=Math.sqrt(x*x*0.45+z*z*0.55);
+    const n=noise(x*0.8+depth*0.3,z*0.8)*(1+depth*0.08);
+    if(d<maxR+n) queueVoxel(x,y,z,pickRandom(depth<4?dirtColors:stoneColors),0.92,0.03,'underside');
+  }
+}
+
+const rockPos=[
+  {x:-2,y:5,z:-1},{x:-1,y:5,z:-1},{x:0,y:5,z:-1},{x:1,y:5,z:-1},
+  {x:-2,y:5,z:0},{x:-1,y:5,z:0},{x:0,y:5,z:0},{x:1,y:5,z:0},
+  {x:-1,y:6,z:0},{x:0,y:6,z:0},{x:1,y:6,z:0},{x:-2,y:6,z:0},
+  {x:-1,y:7,z:0},{x:0,y:7,z:0},{x:0,y:8,z:0},{x:-1,y:8,z:0},
+  {x:3,y:2,z:2},{x:4,y:1,z:-1},{x:-4,y:1,z:-2},{x:5,y:1,z:1},
+];
+rockPos.forEach(d=>queueVoxel(d.x,d.y,d.z,pickRandom(rockColors),0.75,0.1,'rock'));
+
+const trunkPos=[
+  {x:0,y:9,z:0},{x:-1,y:9,z:0},{x:0,y:9,z:-1},{x:-1,y:9,z:-1},
+  {x:0,y:10,z:0},{x:-1,y:10,z:0},{x:0,y:11,z:0},{x:-1,y:11,z:0},
+  {x:0,y:12,z:0},{x:-1,y:12,z:0},{x:0,y:13,z:0},{x:-1,y:13,z:0},
+  {x:0,y:14,z:0},{x:0,y:15,z:0},{x:0,y:16,z:0},{x:0,y:17,z:0},{x:0,y:18,z:0},
+  {x:-2,y:15,z:0},{x:-3,y:15,z:0},{x:-3,y:16,z:0},{x:-4,y:16,z:0},{x:-5,y:17,z:0},
+  {x:1,y:14,z:0},{x:2,y:14,z:0},{x:3,y:15,z:0},{x:4,y:16,z:0},{x:5,y:17,z:-1},
+  {x:0,y:14,z:1},{x:0,y:15,z:2},{x:1,y:16,z:3},
+  {x:1,y:7,z:1},{x:-2,y:7,z:-1},
+];
+trunkPos.forEach(d=>queueVoxel(d.x,d.y,d.z,pickRandom(trunkColors),0.9,0.05,'trunk'));
+
+const leafSet=new Set();
+function addLeaf(x,y,z){
+  const k=`${x},${y},${z}`;
+  if(!leafSet.has(k)){ leafSet.add(k); queueVoxel(x,y,z,pickRandom(leafColors),0.7,0.05,'leaf'); }
+}
+for(let x=-8;x<=8;x++) for(let y=15;y<=26;y++) for(let z=-7;z<=7;z++){
+  const dx=x,dy=(y-20)*1.4,dz=z;
+  if(Math.sqrt(dx*dx+dy*dy+dz*dz)<6.5+Math.sin(x*1.8+z*1.4)*0.7+Math.cos(y*1.1+x*0.7)*0.6 && Math.random()>0.18) addLeaf(x,y,z);
+}
+[{cx:-5,cy:17,cz:0,r:3.5},{cx:5,cy:17,cz:-1,r:3.5},{cx:0,cy:24,cz:0,r:3},
+ {cx:1,cy:17,cz:3,r:3.2},{cx:0,cy:18,cz:-5,r:2.2},{cx:0,cy:18,cz:5,r:2.2}]
+.forEach(t=>{
+  for(let x=Math.floor(t.cx-t.r-1);x<=Math.ceil(t.cx+t.r+1);x++)
+  for(let y=Math.floor(t.cy-t.r);y<=Math.ceil(t.cy+t.r+1);y++)
+  for(let z=Math.floor(t.cz-t.r-1);z<=Math.ceil(t.cz+t.r+1);z++){
+    if(Math.sqrt((x-t.cx)**2+(y-t.cy)**2*1.15+(z-t.cz)**2)<t.r&&Math.random()>0.2) addLeaf(x,y,z);
+  }
+});
+
+// ── BUILD MESHES ───────────────────────────────────────────────────────
+const voxelMeshes=[];
+const dummy=new THREE.Object3D();
+const tmpColor=new THREE.Color();
+
+for(const cat in categoryBatches){
+  const b=categoryBatches[cat];
+  if(!b.items.length) continue;
+  const mat=new THREE.MeshStandardNodeMaterial();
+  mat.roughness=b.rough; mat.metalness=b.metal;
+  mat.flatShading=true; mat.envMapIntensity=1.2;
+  const im=new THREE.InstancedMesh(voxelGeo,mat,b.items.length);
+  im.castShadow=true; im.receiveShadow=true;
+  b.items.forEach((item,i)=>{
+    dummy.position.set(item.x,item.y+0.5,item.z);
+    dummy.updateMatrix();
+    im.setMatrixAt(i,dummy.matrix);
+    tmpColor.set(item.hex);
+    im.setColorAt(i,tmpColor);
+  });
+  im.instanceMatrix.needsUpdate=true;
+  if(im.instanceColor) im.instanceColor.needsUpdate=true;
+  scene.add(im);
+  voxelMeshes.push(im);
+}
+
+// ── LIGHTS ────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x8888ff,0.6));
+const sun=new THREE.DirectionalLight(0xfff5e0,2.5);
+sun.position.set(6,14,5); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.radius=5; sun.shadow.blurSamples=16;
+sun.shadow.camera.left=-32; sun.shadow.camera.right=32;
+sun.shadow.camera.top=32; sun.shadow.camera.bottom=-32;
+scene.add(sun);
+const fill=new THREE.DirectionalLight(0x6366f1,0.8);
+fill.position.set(-5,8,-3); scene.add(fill);
+const rim=new THREE.PointLight(0xa78bfa,1.5,30);
+rim.position.set(-4,12,-5); scene.add(rim);
+const accent=new THREE.PointLight(0x10b981,1.0,25);
+accent.position.set(4,10,4); scene.add(accent);
+
+// ── CONTROLS ──────────────────────────────────────────────────────────
+const controls=new OrbitControls(camera,canvas);
+controls.enableDamping=true; controls.dampingFactor=0.05;
+controls.minDistance=2; controls.maxDistance=500;
+controls.target.set(0,6,0);
+controls.enableZoom=false;
+controls.autoRotate=true; controls.autoRotateSpeed=0.4;
+
+// ── MOUSE REPULSION ───────────────────────────────────────────────────
+const raycaster=new THREE.Raycaster();
+const mouse=new THREE.Vector2(9999,9999);
+const _mat4=new THREE.Matrix4();
+const _dummy2=new THREE.Object3D();
+const _dir=new THREE.Vector3();
+const origData=new Map();
+
+voxelMeshes.forEach(im=>{
+  const count=im.count;
+  const orig=new Float32Array(count*3);
+  const offsets=new Float32Array(count*3);
+  for(let i=0;i<count;i++){
+    im.getMatrixAt(i,_mat4);
+    _mat4.decompose(_dummy2.position,_dummy2.quaternion,_dummy2.scale);
+    orig[i*3]=_dummy2.position.x;
+    orig[i*3+1]=_dummy2.position.y;
+    orig[i*3+2]=_dummy2.position.z;
+  }
+  origData.set(im,{orig,offsets,count});
+});
+
+const bboxCenter=new THREE.Vector3(0,6,0);
+const rayPlane=new THREE.Plane();
+const planeHit=new THREE.Vector3();
+const smoothHit=new THREE.Vector3(9999,9999,9999);
+let hasHit=false;
+
+canvas.addEventListener('mousemove',e=>{
+  const rect=canvas.getBoundingClientRect();
+  mouse.x=((e.clientX-rect.left)/rect.width)*2-1;
+  mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
+});
+canvas.addEventListener('mouseleave',()=>{ mouse.set(9999,9999); hasHit=false; });
+
+function updateRepulsion(dt){
+  raycaster.setFromCamera(mouse,camera);
+  rayPlane.setFromNormalAndCoplanarPoint(raycaster.ray.direction.clone().negate(),bboxCenter);
+  const rawHit=raycaster.ray.intersectPlane(rayPlane,planeHit);
+  hasHit=rawHit&&planeHit.distanceTo(bboxCenter)<20;
+  if(hasHit) smoothHit.lerp(planeHit,0.15);
+  const dtC=Math.min(dt,0.05);
+  voxelMeshes.forEach(im=>{
+    const d=origData.get(im); if(!d) return;
+    const{orig,offsets,count}=d;
+    let upd=false;
+    for(let i=0;i<count;i++){
+      const ox=orig[i*3],oy=orig[i*3+1],oz=orig[i*3+2];
+      let tx=0,ty=0,tz=0;
+      if(hasHit){
+        _dir.set(ox-smoothHit.x,oy-smoothHit.y,oz-smoothHit.z);
+        const dist=_dir.length();
+        if(dist<8&&dist>0.01){
+          const f=(1-dist/8)**3*16;
+          _dir.normalize();
+          tx=_dir.x*f; ty=_dir.y*f; tz=_dir.z*f;
+        }
+      }
+      const sp=hasHit?8:2.5;
+      const lf=1-Math.exp(-sp*dtC);
+      offsets[i*3]+=(tx-offsets[i*3])*lf;
+      offsets[i*3+1]+=(ty-offsets[i*3+1])*lf;
+      offsets[i*3+2]+=(tz-offsets[i*3+2])*lf;
+      if(Math.abs(offsets[i*3])>0.001||Math.abs(offsets[i*3+1])>0.001||Math.abs(offsets[i*3+2])>0.001){
+        im.getMatrixAt(i,_mat4);
+        _mat4.decompose(_dummy2.position,_dummy2.quaternion,_dummy2.scale);
+        _dummy2.position.set(ox+offsets[i*3],oy+offsets[i*3+1],oz+offsets[i*3+2]);
+        _dummy2.updateMatrix();
+        im.setMatrixAt(i,_dummy2.matrix);
+        upd=true;
+      }
+    }
+    if(upd) im.instanceMatrix.needsUpdate=true;
+  });
+}
+
+// ── VARIATION MORPHING ─────────────────────────────────────────────────
+// 0 = Indigo/Emerald (SkillSwap brand)
+// 1 = Sunset (amber/rose — winter warmth)
+// 2 = Neon spring (cyan/purple)
+const variations=[
+  {leaf:['#6366f1','#818cf8','#4f46e5','#7c3aed','#10b981','#34d399']},
+  {leaf:['#f59e0b','#fb923c','#f43f5e','#fbbf24','#ef4444','#fd7f46']},
+  {leaf:['#06b6d4','#22d3ee','#8b5cf6','#a78bfa','#0ea5e9','#c084fc']},
+];
+let currentVar=0; let morphing=false; let morphT=0; const morphDur=1.8;
+let morphFrom=null; let morphTo=null;
+const tmpC=new THREE.Color();
+
+function snapshotColors(){
+  const snap=new Map();
+  voxelMeshes.forEach(im=>{
+    const cols=new Float32Array(im.count*3);
+    for(let i=0;i<im.count;i++){
+      im.getColorAt(i,tmpC);
+      cols[i*3]=tmpC.r; cols[i*3+1]=tmpC.g; cols[i*3+2]=tmpC.b;
+    }
+    snap.set(im,cols);
+  });
+  return snap;
+}
+
+function startMorph(v){
+  if(morphing&&morphTo===v) return;
+  morphFrom=snapshotColors();
+  morphTo=v; morphT=0; morphing=true;
+}
+
+function updateMorph(dt){
+  if(!morphing) return;
+  morphT=Math.min(morphT+dt/morphDur,1);
+  const t=morphT<0.5?4*morphT**3:1-(-2*morphT+2)**3/2;
+  const vc=variations[morphTo];
+  voxelMeshes.forEach(im=>{
+    const from=morphFrom.get(im); if(!from) return;
+    for(let i=0;i<im.count;i++){
+      const fr=from[i*3],fg=from[i*3+1],fb=from[i*3+2];
+      const isLeafColor=fb>0.3||fg>0.4;
+      if(isLeafColor){
+        const tc=new THREE.Color(vc.leaf[i%vc.leaf.length]);
+        tmpC.setRGB(fr+(tc.r-fr)*t,fg+(tc.g-fg)*t,fb+(tc.b-fb)*t);
+        im.setColorAt(i,tmpC);
+      }
+    }
+    if(im.instanceColor) im.instanceColor.needsUpdate=true;
+  });
+  if(morphT>=1){ morphing=false; currentVar=morphTo; }
+}
+
+document.querySelectorAll('.morph-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    startMorph(parseInt(btn.dataset.variation));
+    document.querySelectorAll('.morph-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// ── ANIMATE ───────────────────────────────────────────────────────────
+let lastT=performance.now();
+function animate(){
+  const now=performance.now(); const dt=(now-lastT)/1000; lastT=now;
+  controls.update();
+  updateRepulsion(dt);
+  updateMorph(dt);
+  renderer.render(scene,camera);
+}
+renderer.setAnimationLoop(animate);
+
+window.addEventListener('resize',()=>{
+  camera.aspect=W()/H();
+  camera.updateProjectionMatrix();
+  applyViewOffset();
+  renderer.setSize(W(),H());
+});
+</script>
+</body>
+</html>

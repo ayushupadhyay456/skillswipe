@@ -1,0 +1,28 @@
+##############################################################################
+# docker-compose.dev.yml  –  Development overrides
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#
+# Differences from production:
+#   • Flask dev server (auto-reload on code changes)
+#   • Postgres and Redis ports exposed to host for debugging
+#   • FLASK_ENV=development
+##############################################################################
+
+services:
+  web:
+    command: python app.py
+    environment:
+      FLASK_ENV: development
+      FLASK_DEBUG: "1"
+    volumes:
+      - .:/app    # full bind-mount so code changes reflect instantly
+
+  postgres:
+    ports:
+      - "5432:5432"   # connect with psql or TablePlus from host
+
+  redis:
+    ports:
+      - "6379:6379"   # connect with redis-cli from host
