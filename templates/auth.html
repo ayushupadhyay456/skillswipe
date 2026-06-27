@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{% if page == 'login' %}Log in{% else %}Join{% endif %} — SkillSwap{% endblock %}
+{% block content %}
+
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="logo-mark">S</span>
+    </div>
+    <h1 class="auth-title">{% if page == 'login' %}Welcome back{% else %}Start swapping{% endif %}</h1>
+    <p class="auth-sub">{% if page == 'login' %}Log in to your account{% else %}Create your free account{% endif %}</p>
+
+    <form method="POST" class="auth-form">
+      {% if page == 'signup' %}
+      <div class="form-group">
+        <label class="form-label">Full name</label>
+        <input type="text" name="name" class="form-input" placeholder="Arjun Kumar" required>
+      </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-input" placeholder="you@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+      </div>
+
+      {% if page == 'signup' %}
+      <div class="form-group">
+        <label class="form-label">City</label>
+        <input type="text" name="city" class="form-input" placeholder="Bangalore">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">I can teach</label>
+          <input type="text" name="offer_skill" class="form-input" placeholder="e.g. Python, Guitar, Yoga">
+        </div>
+        <div class="form-group">
+          <label class="form-label">I want to learn</label>
+          <input type="text" name="want_skill" class="form-input" placeholder="e.g. Figma, French, Excel">
+        </div>
+      </div>
+      {% endif %}
+
+      <button type="submit" class="btn-primary btn-full">
+        {% if page == 'login' %}Log in{% else %}Create account{% endif %}
+      </button>
+    </form>
+
+    <div class="auth-switch">
+      {% if page == 'login' %}
+        Don't have an account? <a href="{{ url_for('signup') }}">Join free</a>
+      {% else %}
+        Already have an account? <a href="{{ url_for('login') }}">Log in</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}My swaps — SkillSwap{% endblock %}
+{% block content %}
+
+<div class="swaps-page">
+  <h1 class="page-title">My swaps</h1>
+
+  <div class="swaps-tabs">
+    <button class="tab-btn active" onclick="switchTab('received', this)">
+      Received <span class="tab-count">{{ received|length }}</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('sent', this)">
+      Sent <span class="tab-count">{{ sent|length }}</span>
+    </button>
+  </div>
+
+  <div id="tab-received" class="tab-panel">
+    {% if not received %}
+    <div class="empty-state"><p>No incoming requests yet.</p></div>
+    {% endif %}
+    {% for req in received %}
+    <div class="swap-row-card" id="req-{{ req.id }}">
+      <div class="srow-left">
+        <div class="avatar av-{{ req.sender.avatar_color }}">{{ req.sender.avatar_initials }}</div>
+        <div class="srow-info">
+          <div class="srow-name"><a href="{{ url_for('profile', user_id=req.sender.id) }}">{{ req.sender.name }}</a></div>
+          <div class="srow-skills">
+            <span class="skill-tag st-offer">{{ req.sender.offer_skill or '?' }}</span>
+            <span>⇄</span>
+            <span class="skill-tag st-want">{{ req.sender.want_skill or '?' }}</span>
+          </div>
+          {% if req.message %}<div class="srow-msg">"{{ req.message }}"</div>{% endif %}
+        </div>
+      </div>
+      <div class="srow-right">
+        <span class="status-badge status-{{ req.status }}">{{ req.status }}</span>
+        {% if req.status == 'pending' %}
+        <div class="srow-actions">
+          <button class="btn-primary btn-sm" onclick="respondSwap({{ req.id }}, 'accept')">Accept</button>
+          <button class="btn-ghost btn-sm" onclick="respondSwap({{ req.id }}, 'decline')">Decline</button>
+        </div>
+        {% elif req.status == 'accepted' %}
+        <a href="{{ url_for('chat', other_id=req.sender.id) }}" class="btn-outline btn-sm">Message</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div id="tab-sent" class="tab-panel" style="display:none">
+    {% if not sent %}
+    <div class="empty-state"><p>You haven't sent any requests yet. <a href="{{ url_for('browse') }}">Browse skills</a></p></div>
+    {% endif %}
+    {% for req in sent %}
+    <div class="swap-row-card">
+      <div class="srow-left">
+        <div class="avatar av-{{ req.receiver.avatar_color }}">{{ req.receiver.avatar_initials }}</div>
+        <div class="srow-info">
+          <div class="srow-name"><a href="{{ url_for('profile', user_id=req.receiver.id) }}">{{ req.receiver.name }}</a></div>
+          <div class="srow-skills">
+            <span class="skill-tag st-offer">{{ req.receiver.offer_skill or '?' }}</span>
+            <span>⇄</span>
+            <span class="skill-tag st-want">{{ req.receiver.want_skill or '?' }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="srow-right">
+        <span class="status-badge status-{{ req.status }}">{{ req.status }}</span>
+        {% if req.status == 'accepted' %}
+        <a href="{{ url_for('chat', other_id=req.receiver.id) }}" class="btn-outline btn-sm">Message</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).style.display = 'block';
+  btn.classList.add('active');
+}
+
+async function respondSwap(reqId, action) {
+  const res = await fetch(`/swap/${reqId}/respond`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ action })
+  });
+  const data = await res.json();
+  if (data.status) {
+    showToast(action === 'accept' ? 'Swap accepted!' : 'Request declined.', action === 'accept' ? 'success' : 'info');
+    setTimeout(() => location.reload(), 800);
+  }
+}
+</script>
+{% endblock %}

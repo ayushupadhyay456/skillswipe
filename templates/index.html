@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}SkillSwap — trade skills, not money{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">No money. No marketplace fees.</div>
+    <h1 class="hero-title">Trade what you know<br>for what you want to learn.</h1>
+    <p class="hero-sub">Connect with people who have your target skill — and want yours. Pure skill exchange.</p>
+    <div class="hero-cta">
+      <a href="{{ url_for('signup') }}" class="btn-primary btn-lg">Start swapping</a>
+      <a href="{{ url_for('browse') }}" class="btn-outline btn-lg">Browse skills</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item"><span class="stat-n">{{ total_users }}+</span><span class="stat-l">Swappers</span></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><span class="stat-n">{{ total_swaps }}+</span><span class="stat-l">Completed swaps</span></div>
+      <div class="stat-sep"></div>
+      <div class="stat-item"><span class="stat-n">120+</span><span class="stat-l">Skills listed</span></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="swap-demo">
+      <div class="demo-card dc-top">
+        <div class="demo-av av-teal">PR</div>
+        <div class="demo-info">
+          <div class="demo-name">Priya teaches Figma</div>
+          <div class="demo-skill skill-offer">Figma UI</div>
+        </div>
+      </div>
+      <div class="demo-arrow">⇄</div>
+      <div class="demo-card dc-bot">
+        <div class="demo-av av-purple">AK</div>
+        <div class="demo-info">
+          <div class="demo-name">Arjun teaches Guitar</div>
+          <div class="demo-skill skill-want">Guitar</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="how-it-works">
+  <div class="section-inner">
+    <h2 class="section-title">How it works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon">01</div>
+        <h3>List your skills</h3>
+        <p>Tell us what you're great at and what you want to learn.</p>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-icon">02</div>
+        <h3>Find your match</h3>
+        <p>Browse people who offer what you want and want what you offer.</p>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-icon">03</div>
+        <h3>Start swapping</h3>
+        <p>Connect, schedule sessions, and grow together — for free.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="section-inner cta-inner">
+    <h2>Ready to start learning?</h2>
+    <a href="{{ url_for('signup') }}" class="btn-primary btn-lg">Create your profile</a>
+  </div>
+</section>
+
+{% endblock %}

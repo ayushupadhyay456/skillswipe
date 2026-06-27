@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}{{ user.name }} — SkillSwap{% endblock %}
+{% block content %}
+
+<div class="profile-page">
+  <div class="profile-card">
+    <div class="profile-head">
+      <div class="avatar-lg av-{{ user.avatar_color }}">{{ user.avatar_initials }}</div>
+      <div class="profile-info">
+        <h1 class="profile-name">{{ user.name }}</h1>
+        {% if user.city %}<div class="profile-city">📍 {{ user.city }}</div>{% endif %}
+        {% if user.rating > 0 %}
+        <div class="profile-rating">
+          {% for i in range(5) %}
+            {% if i < user.rating|int %}<span class="star star-filled">★</span>
+            {% else %}<span class="star star-empty">★</span>{% endif %}
+          {% endfor %}
+          <span class="rating-num">{{ user.rating }} ({{ user.review_count }} reviews)</span>
+        </div>
+        {% else %}
+        <div class="profile-rating"><span class="new-badge">New member</span></div>
+        {% endif %}
+      </div>
+
+      {% if current_user.is_authenticated and current_user.id != user.id %}
+      <div class="profile-actions">
+        {% if swap_status == 'pending' %}
+          <button class="btn-outline" disabled>Request pending</button>
+        {% elif swap_status == 'accepted' %}
+          <a href="{{ url_for('chat', other_id=user.id) }}" class="btn-primary">Message</a>
+        {% else %}
+          <button class="btn-primary" onclick="openSwapModal({{ user.id }}, '{{ user.name }}', '{{ user.offer_skill }}', '{{ user.want_skill }}')">Request swap</button>
+          <a href="{{ url_for('chat', other_id=user.id) }}" class="btn-outline">Message</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    {% if user.bio %}
+    <div class="profile-bio">{{ user.bio }}</div>
+    {% endif %}
+
+    <div class="swap-showcase">
+      <div class="swap-box sb-offer">
+        <div class="sb-label">Offers</div>
+        <div class="sb-skill">{{ user.offer_skill or 'Not set' }}</div>
+      </div>
+      <div class="swap-arrow-lg">⇄</div>
+      <div class="swap-box sb-want">
+        <div class="sb-label">Wants to learn</div>
+        <div class="sb-skill">{{ user.want_skill or 'Not set' }}</div>
+      </div>
+    </div>
+
+    <div class="profile-stats">
+      <div class="pstat">
+        <div class="pstat-n">{{ user.sessions_done }}</div>
+        <div class="pstat-l">Sessions done</div>
+      </div>
+      <div class="pstat">
+        <div class="pstat-n">{{ user.review_count }}</div>
+        <div class="pstat-l">Reviews</div>
+      </div>
+      <div class="pstat">
+        <div class="pstat-n">{{ user.rating if user.rating > 0 else '—' }}</div>
+        <div class="pstat-l">Avg rating</div>
+      </div>
+    </div>
+  </div>
+
+  {% if reviews %}
+  <div class="reviews-section">
+    <h2 class="section-h2">Reviews</h2>
+    {% for rv in reviews %}
+    <div class="review-card">
+      <div class="review-head">
+        <div class="avatar-sm av-{{ rv.reviewer_color }}">{{ rv.reviewer_initials }}</div>
+        <div class="review-meta">
+          <div class="review-name">{{ rv.reviewer_name }}</div>
+          <div class="review-date">{{ rv.date }}</div>
+        </div>
+        <div class="review-stars">
+          {% for i in range(rv.rating) %}★{% endfor %}
+        </div>
+      </div>
+      {% if rv.comment %}<p class="review-comment">{{ rv.comment }}</p>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- Swap Modal -->
+<div class="modal-overlay" id="swapModal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Request a swap</h3>
+      <button class="modal-close" onclick="closeSwapModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-sub" id="modal-sub"></p>
+      <label class="form-label">Add a message (optional)</label>
+      <textarea id="swap-message" class="form-textarea" rows="3" placeholder="Hi! I'd love to swap..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeSwapModal()">Cancel</button>
+      <button class="btn-primary" onclick="submitSwapRequest()">Send request</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let activeReceiverId = null;
+function openSwapModal(id, name, offer, want) {
+  activeReceiverId = id;
+  document.getElementById('modal-title').textContent = `Swap with ${name}`;
+  document.getElementById('modal-sub').textContent = `They offer ${offer} · They want ${want}`;
+  document.getElementById('swapModal').style.display = 'flex';
+}
+function closeSwapModal() {
+  document.getElementById('swapModal').style.display = 'none';
+  document.getElementById('swap-message').value = '';
+}
+async function submitSwapRequest() {
+  const res = await fetch(`/swap/request/${activeReceiverId}`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ message: document.getElementById('swap-message').value })
+  });
+  const data = await res.json();
+  if (data.error) { showToast(data.error, 'error'); }
+  else { showToast('Swap request sent!', 'success'); closeSwapModal(); setTimeout(() => location.reload(), 1200); }
+}
+document.getElementById('swapModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeSwapModal(); });
+</script>
+{% endblock %}

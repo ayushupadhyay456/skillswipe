@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Messages — SkillSwap{% endblock %}
+{% block content %}
+
+<div class="messages-page">
+  <h1 class="page-title">Messages</h1>
+  {% if not partners %}
+  <div class="empty-state">
+    <p>No conversations yet. Accept a swap to start chatting.</p>
+    <a href="{{ url_for('browse') }}" class="btn-outline">Browse skills</a>
+  </div>
+  {% endif %}
+  {% for p in partners %}
+  <a href="{{ url_for('chat', other_id=p.user.id) }}" class="convo-row {% if p.unread > 0 %}convo-unread{% endif %}">
+    <div class="avatar av-{{ p.user.avatar_color }}">{{ p.user.avatar_initials }}</div>
+    <div class="convo-info">
+      <div class="convo-name">{{ p.user.name }}</div>
+      <div class="convo-last">{{ p.last.content[:60] if p.last else 'Start the conversation' }}{% if p.last and p.last.content|length > 60 %}…{% endif %}</div>
+    </div>
+    <div class="convo-meta">
+      {% if p.last %}<div class="convo-time">{{ p.last.created_at.strftime('%H:%M') }}</div>{% endif %}
+      {% if p.unread > 0 %}<div class="unread-dot">{{ p.unread }}</div>{% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+
+{% endblock %}

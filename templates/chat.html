@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Chat with {{ other.name }} — SkillSwap{% endblock %}
+{% block content %}
+
+<div class="chat-page">
+  <div class="chat-header">
+    <a href="{{ url_for('messages') }}" class="back-btn">← Back</a>
+    <a href="{{ url_for('profile', user_id=other.id) }}" class="chat-user-info">
+      <div class="avatar av-{{ other.avatar_color }}">{{ other.avatar_initials }}</div>
+      <div>
+        <div class="chat-name">{{ other.name }}</div>
+        {% if other.city %}<div class="chat-city">{{ other.city }}</div>{% endif %}
+      </div>
+    </a>
+    <div class="chat-skills">
+      <span class="skill-tag st-offer">{{ other.offer_skill }}</span>
+      <span>⇄</span>
+      <span class="skill-tag st-want">{{ other.want_skill }}</span>
+    </div>
+  </div>
+
+  <div class="chat-messages" id="chatMessages">
+    {% for msg in messages %}
+    <div class="msg {% if msg.sender_id == current_user.id %}msg-mine{% else %}msg-theirs{% endif %}">
+      <div class="msg-bubble">{{ msg.content }}</div>
+      <div class="msg-time">{{ msg.created_at.strftime('%H:%M') }}</div>
+    </div>
+    {% endfor %}
+    {% if not messages %}
+    <div class="chat-empty">Start the conversation — say hello!</div>
+    {% endif %}
+  </div>
+
+  <div class="chat-input-wrap">
+    <textarea id="msgInput" class="chat-input" placeholder="Type a message..." rows="1" onkeydown="handleKey(event)"></textarea>
+    <button class="send-btn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const OTHER_ID = {{ other.id }};
+const MY_ID = {{ current_user.id }};
+
+function scrollBottom() {
+  const c = document.getElementById('chatMessages');
+  c.scrollTop = c.scrollHeight;
+}
+scrollBottom();
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const content = input.value.trim();
+  if (!content) return;
+  input.value = '';
+
+  const res = await fetch(`/api/messages/${OTHER_ID}`, {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ content })
+  });
+  const data = await res.json();
+  if (data.id) appendMessage(data, true);
+}
+
+function appendMessage(data, mine) {
+  const c = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (mine ? 'msg-mine' : 'msg-theirs');
+  div.innerHTML = `<div class="msg-bubble">${escHtml(data.content)}</div><div class="msg-time">${data.ts}</div>`;
+  c.appendChild(div);
+  scrollBottom();
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+if (typeof socket !== 'undefined') {
+  socket.on('new_message', (data) => {
+    if (data.sender_id !== MY_ID) appendMessage(data, false);
+  });
+}
+</script>
+{% endblock %}

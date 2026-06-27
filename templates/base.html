@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}SkillSwap{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+{% block head %}{% endblock %}
+</head>
+<body>
+
+<nav class="nav">
+  <a href="{{ url_for('index') }}" class="logo">
+    <span class="logo-mark">S</span>SkillSwap
+  </a>
+  <div class="nav-center">
+    <a href="{{ url_for('browse') }}" class="nav-link {% if request.endpoint == 'browse' %}active{% endif %}">Browse</a>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('swaps') }}" class="nav-link {% if request.endpoint == 'swaps' %}active{% endif %}">My swaps</a>
+    <a href="{{ url_for('messages') }}" class="nav-link {% if request.endpoint in ['messages','chat'] %}active{% endif %}">
+      Messages {% if unread is defined and unread > 0 %}<span class="badge-dot">{{ unread }}</span>{% endif %}
+    </a>
+    {% endif %}
+  </div>
+  <div class="nav-right">
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('my_profile') }}" class="avatar-btn av-{{ current_user.avatar_color }}">{{ current_user.avatar_initials }}</a>
+      <a href="{{ url_for('logout') }}" class="btn-ghost">Log out</a>
+    {% else %}
+      <a href="{{ url_for('login') }}" class="btn-ghost">Log in</a>
+      <a href="{{ url_for('signup') }}" class="btn-primary">Join free</a>
+    {% endif %}
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for cat, msg in messages %}
+    <div class="flash flash-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div id="toast-container"></div>
+
+{% block content %}{% endblock %}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% if current_user.is_authenticated %}
+<script>
+const socket = io();
+socket.emit('join', { user_id: {{ current_user.id }} {% if request.endpoint == 'chat' %}, other_id: {{ other.id if other is defined else 'null' }}{% endif %} });
+socket.on('notification', (data) => {
+  showToast(data.text, data.type);
+});
+</script>
+{% endif %}
+{% block scripts %}{% endblock %}
+</body>
+</html>
