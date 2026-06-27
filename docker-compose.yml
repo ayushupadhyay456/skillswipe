@@ -1,0 +1,87 @@
+##############################################################################
+# docker-compose.yml  –  SkillSwap
+#
+# Services
+# ────────
+#   web      – Flask + SocketIO (eventlet)  → http://localhost:5000
+#   nginx    – Reverse proxy + static files → http://localhost:80
+#   redis    – Cache + pub/sub + sessions
+#   postgres – Primary relational database
+#
+# Run:
+#   docker compose up --build
+#
+# First run creates all tables and seeds sample data automatically.
+##############################################################################
+
+services:
+
+  # ── Flask application ───────────────────────────────────────────────────────
+  web:
+    build: .
+    command: python app.py
+    expose:
+      - "5000"
+    env_file: .env
+    environment:
+      FLASK_ENV: development
+      DATABASE_URL: postgresql://skillswap:skillswap@postgres:5432/skillswap
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Nginx reverse proxy ─────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      # Serve Flask static files directly (faster than going through gunicorn)
+      - ./static:/app/static:ro
+    depends_on:
+      - web
+    restart: unless-stopped
+
+  # ── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: skillswap
+      POSTGRES_PASSWORD: skillswap
+      POSTGRES_DB: skillswap
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skillswap -d skillswap"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  postgres_data:
